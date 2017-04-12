@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(magrittr)\nlibrary(dplyr)\nlibrary(readxl)\nlibrary(fpc)\nlibrary(lattice)\nlibrary(MASS)\nlibrary(nnet)\nlibrary(outliers)\n\nMatrix=c(1,0.71,0.46,1.41,1,0.85,2.18,1.18,1);\ndim(Matrix)=c(3,3)\nev=eigen(Matrix)\nEValue=max(as.numeric(ev$values))\nn=dim(Matrix)[1]\nCI=(EValue-n)/(n-1)\n\nsalesRFM <- read_excel(\"consumption_data.xls\")\nnames(salesRFM)<-c(\"CustomerId\", \"Monetization\", \"Frequency\",\"Recency\")\n\n#data processing\nsum(is.na(salesRFM))\nsum(complete.cases(salesRFM))\n\n#boxplot analysis\nbplot=boxplot(salesRFM$Monetization,boxwex=0.7)\nif(length(bplot$out)>0)\n  salesRFM <- salesRFM[-which(salesRFM$Monetization %in% bplot$out),]\nbplot=boxplot(salesRFM$Frequency,boxwex=0.7)\nif(length(bplot$out)>0)\n  salesRFM <- salesRFM[-which(salesRFM$Frequency %in% bplot$out),]\nbplot=boxplot(salesRFM$Recency,boxwex=0.7)\nif(length(bplot$out)>0)\n  salesRFM <- salesRFM[-which(salesRFM$Recency %in% bplot$out),]\n\n#k-means Abnormal detection\nsalesRFM$Monetization=scale(salesRFM$Monetization,F)\nsalesRFM$Frequency=scale(salesRFM$Frequency,F)\nsalesRFM$Recency=scale(salesRFM$Recency,F)\nkmeansAbnDetecion<-kmeans(salesRFM[,2:4],centers=8)\ncenters<-kmeansAbnDetecion$centers[kmeansAbnDetecion$cluster,]\ncenters\ndistances<-sqrt(rowSums((salesRFM-centers)^2))\noutliers<-order(distances,decreasing = T)[1:10]\nplot(salesRFM[,2:3],pch=\"o\",col=kmeansAbnDetecion$cluster,cex=0.3)\noutliers\npoints(salesRFM[outliers,2:3],pch=\"+\",col=4,cex=1.5)\nsalesRFM <- salesRFM[-which(salesRFM$CustomerId %in% outliers),]\n\n#scale\nsalesRFM$Monetization=scale(salesRFM$Monetization,F)\nsalesRFM$Frequency=scale(salesRFM$Frequency,F)\nsalesRFM$Recency=scale(salesRFM$Recency,F)\n\nsalesRFM$Value=salesRFM$Monetization*0.221+salesRFM$Frequency*0.341+salesRFM$Recency*0.439\n\nsalesRFM$Category = kmeans(salesRFM$Value,8)$cluster\n\nCategoryInfo <- aggregate(salesRFM[,2:5],list(salesRFM$Category),mean)\n\nnames(CategoryInfo)<-c(\"CategoryInfoID\", \"MonetizationMean\", \"FrequencyMean\",\"RecencyMean\",\"ValueMean\")\n\nMonetizationMean=mean(CategoryInfo$MonetizationMean)\nFrequencyMean=mean(CategoryInfo$FrequencyMean)\nRecencyMean=mean(CategoryInfo$RecencyMean)\nValueMean=mean(CategoryInfo$ValueMean)\n\nCategoryInfo$MonetizationComp=CategoryInfo$MonetizationMean>MonetizationMean\nCategoryInfo$FrequencyComp=CategoryInfo$FrequencyMean>FrequencyMean\nCategoryInfo$RecencyComp=CategoryInfo$RecencyMean>RecencyMean\nCategoryInfo$ValueComp=CategoryInfo$ValueMean>ValueMean\n\nCategoryInfo=CategoryInfo[order(CategoryInfo$ValueMean,decreasing=T),]\n\n",
+    "created" : 1491913347685.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "772317250",
+    "id" : "103E3823",
+    "lastKnownWriteTime" : 1491954720,
+    "last_content_update" : 1491954720035,
+    "path" : "C:/Users/Xiangyu Liu/Desktop/RFM/step2.R",
+    "project_path" : "step2.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
